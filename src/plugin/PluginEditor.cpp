@@ -79,7 +79,7 @@ MergeXEditor::MergeXEditor(MergeXProcessor& p) : juce::AudioProcessorEditor(p), 
     add(smooth, new Knob(p, P_SMOOTH, "Smoothness")); add(formant, new Knob(p, P_FORMANT, "Formant")); add(trans, new Knob(p, P_TRANS, "Transient Keep"));
     smooth->s.setTooltip("Low = fast and detailed, high = slurry and blurred"); formant->s.setTooltip("Shifts the voice/tone shape up or down (not in Grain)"); trans->s.setTooltip("Keeps drum hits and attacks from A punchy");
     add(mix, new Knob(p, P_MIX, "Dry/Wet")); add(outGain, new Knob(p, P_OUT, "Output"));
-    add(limit, new Toggle(p, P_LIMIT, "Safety Limiter")); limit->setTooltip("Catches peaks above -0.3 dB so nothing clips");
+    add(limit, new Toggle(p, P_LIMIT, "Limiter")); limit->setTooltip("Safety limiter: catches peaks above -0.3 dB so nothing clips");
     add(before, new Toggle(p, P_COMPARE, "BEFORE", col::a)); before->setTooltip("Hear only A (your original) for a quick before/after check");
 
     setResizable(true, true); setResizeLimits(kW * 6 / 10, kH * 6 / 10, kW * 2, kH * 2); getConstrainer()->setFixedAspectRatio((double)kW / kH);

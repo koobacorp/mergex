@@ -38,10 +38,15 @@ public:
         juce::Path track; track.addCentredArc(c.getCentreX(), c.getCentreY(), rad, rad, 0, a0, a1, true);
         g.setColour(col::track); g.strokePath(track, juce::PathStrokeType(thick, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
         if (hero) {   // A -> B gradient arc with a soft glow
-            const int segs = 64; for (int k = 0; k < segs; ++k) { float t0 = (float)k / segs, t1 = (float)(k + 1) / segs; if (t0 > pos) break; float e = std::min(t1, pos);
+            juce::Path glowArc; glowArc.addCentredArc(c.getCentreX(), c.getCentreY(), rad, rad, 0, a0, ang, true);
+            g.setColour(morphColour(pos * 0.5f).withAlpha(0.16f)); g.strokePath(glowArc, juce::PathStrokeType(thick * 2.6f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+            const int segs = 160; const float ov = 0.6f / segs;
+            for (int k = 0; k < segs; ++k) { float t0 = (float)k / segs; if (t0 >= pos) break; float e = std::min(t0 + 1.f / segs + ov, pos);
                 juce::Path seg; seg.addCentredArc(c.getCentreX(), c.getCentreY(), rad, rad, 0, a0 + t0 * (a1 - a0), a0 + e * (a1 - a0), true);
-                g.setColour(morphColour(t0).withAlpha(0.25f)); g.strokePath(seg, juce::PathStrokeType(thick * 2.4f, juce::PathStrokeType::curved, juce::PathStrokeType::butt));
                 g.setColour(morphColour(t0)); g.strokePath(seg, juce::PathStrokeType(thick, juce::PathStrokeType::curved, juce::PathStrokeType::butt)); }
+            if (pos > 0.f) { auto pt = juce::Point<float>(c.getCentreX() + rad * std::sin(ang), c.getCentreY() - rad * std::cos(ang));
+                g.setColour(morphColour(pos)); g.fillEllipse(juce::Rectangle<float>(thick, thick).withCentre(pt));
+                auto p0 = juce::Point<float>(c.getCentreX() + rad * std::sin(a0), c.getCentreY() - rad * std::cos(a0)); g.setColour(morphColour(0)); g.fillEllipse(juce::Rectangle<float>(thick, thick).withCentre(p0)); }
         } else {
             float from = bip ? (a0 + a1) * 0.5f : a0; juce::Path arc; arc.addCentredArc(c.getCentreX(), c.getCentreY(), rad, rad, 0, std::min(from, ang), std::max(from, ang), true);
             juce::Colour ac = s.isEnabled() ? juce::Colour((juce::uint32)(int)s.getProperties().getWithDefault("accent", (int)col::mid.getARGB())) : col::off;

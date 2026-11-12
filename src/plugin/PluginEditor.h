@@ -23,15 +23,15 @@ public:
     void mouseDown(const juce::MouseEvent&) override; void mouseDrag(const juce::MouseEvent&) override; void mouseUp(const juce::MouseEvent&) override;
     void mouseDoubleClick(const juce::MouseEvent&) override;
     void setFromMouse(juce::Point<float> pos);
-    juce::Rectangle<float> area() const { return getLocalBounds().toFloat().reduced(10); }
+    juce::Rectangle<float> area() const { return getLocalBounds().toFloat().reduced(16); }
 private:
     MergeXProcessor& proc; bool dragging = false;
 };
 
 /// Little level bar with a caption, for the A and B inputs.
-class LevelBar : public juce::Component {
+class LevelBar : public juce::Component, public juce::SettableTooltipClient {
 public:
-    LevelBar(const juce::String& n, juce::Colour c) : name(n), colour(c) {}
+    LevelBar(const juce::String& n, juce::Colour c) : name(n), colour(c) { setName(n + " level"); setTooltip(n + " input level"); }
     void set(float lin) { float d = juce::jlimit(0.f, 1.f, (20.f * std::log10(std::max(lin, 1e-6f)) + 60.f) / 60.f); if (std::abs(d - level) > 0.004f) { level = d; repaint(); } }
     void paint(juce::Graphics&) override;
     juce::String name; juce::Colour colour; float level = 0;
