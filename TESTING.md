@@ -1,10 +1,21 @@
 # MergeX – how it was tested
 
-Plain summary: the sound engine and the plugin wrapper were tested on a Linux box.
-The real macOS build (the .vst3 you'd load in FL Studio) has **not** been built yet,
-because GitHub Actions refused to start the Mac job (account billing). Nothing has been tried in FL Studio.
+Plain summary: the macOS universal VST3 (arm64 + x86_64) was built and tested on GitHub Actions
+(macos-15-intel runner, Xcode 16.4, CI run 43262881439). Everything below passed. Nothing has been tried in FL Studio yet.
 
-## What ran (Linux box, 12 Nov 2026)
+## macOS CI (the shipped build)
+
+| What | Result |
+|---|---|
+| Engine tests | **460 passed, 0 failed** |
+| Plugin tests (processor + editor + screenshots) | **213 passed, 0 failed** |
+| pluginval, strictness 10, on the signed universal VST3 | **SUCCESS** |
+| Architectures | x86_64 + arm64 (lipo verified), macOS 11.0 or newer |
+| Signature | ad-hoc (`codesign --verify --deep --strict` passed) |
+| CPU, 48 kHz, 256-sample blocks (CI Intel Mac, one core) | 3.1–4.3 % |
+| Latency | 1024 samples at 44.1/48 kHz (23.2 / 21.3 ms); 2048 at 88.2/96 kHz; 4096 at 192 kHz |
+
+## Earlier Linux check (box, 12 Nov 2026)
 
 | What | Result |
 |---|---|
@@ -32,6 +43,3 @@ Logs: `dist/engine-test-log.txt`, `dist/plugin-test-log.txt`, `dist/pluginval-li
   5-line library that has nothing to do with MergeX. The Linux check links with `-z nodelete` to avoid it. macOS is not affected.
 - The screenshots in `dist/screenshots/` come from this Linux build (JUCE draws the same on macOS, but fonts may differ slightly).
 
-## Still to do on macOS (CI workflow `.github/workflows/macos.yml`)
-Once GitHub billing is fixed, re-run the workflow. It builds universal arm64 + x86_64, runs both test suites,
-runs pluginval at strictness 10 on the real Mac VST3, ad-hoc signs it, and makes the zip.
