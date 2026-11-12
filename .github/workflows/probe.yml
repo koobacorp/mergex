@@ -2,6 +2,11 @@ name: runner-probe
 on: workflow_dispatch
 jobs:
   probe:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-14, macos-15, macos-latest, macos-15-intel, macos-26]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
     steps:
-      - run: echo "hosted runner ok"
+      - run: echo "hosted runner ok on ${{ matrix.os }}"; uname -m
