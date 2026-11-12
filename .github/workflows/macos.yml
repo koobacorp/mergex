@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-15-intel   # arm64 hosted runners were not picking up jobs; this still builds the universal binary
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
