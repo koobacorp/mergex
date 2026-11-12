@@ -1,0 +1,76 @@
+name: MergeX macOS universal
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: JUCE 8.0.4
+        run: git clone --depth 1 --branch 8.0.4 https://github.com/juce-framework/JUCE.git JUCE
+      - name: Configure universal
+        run: cmake -S . -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DMX_BUILD_TOOLS=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel 4 -- -quiet
+      - name: Engine tests (textbook math)
+        shell: bash
+        run: |
+          set -o pipefail
+          ./build/Release/mx_engine_tests 2>&1 | tee engine-test-log.txt
+      - name: Plugin tests (JUCE processor + editor screenshots + CPU)
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p shots && cd shots
+          ../build/mx_plugin_tests_artefacts/Release/mx_plugin_tests 2>&1 | tee ../plugin-test-log.txt
+      - name: Demo WAVs
+        run: mkdir -p demos && ./build/Release/mx_render_demos demos | tee demos-log.txt
+      - name: Strip, sign, verify universal
+        shell: bash
+        run: |
+          set -e
+          b="build/MergeX_artefacts/Release/VST3/MergeX.vst3"
+          strip -x "$b/Contents/MacOS/MergeX"
+          codesign --force --deep --sign - --timestamp=none "$b"
+          codesign --verify --deep --strict "$b"
+          lipo -info "$b/Contents/MacOS/MergeX" | tee lipo.txt
+          lipo "$b/Contents/MacOS/MergeX" -verify_arch arm64 x86_64
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$b/Contents/Info.plist" | tee version.txt
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$b/Contents/Info.plist" | tee -a version.txt
+          otool -l "$b/Contents/MacOS/MergeX" | grep -A3 -E "LC_BUILD_VERSION|LC_VERSION_MIN" | grep -E "minos|version" | head -2 | tee minos.txt
+          du -sh "$b" | tee size.txt; stat -f "%z bytes binary" "$b/Contents/MacOS/MergeX" | tee -a size.txt
+      - name: pluginval VST3 strictness 10 (required)
+        shell: bash
+        run: |
+          set -o pipefail
+          curl -fLsS -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          unzip -q pluginval.zip
+          ./pluginval.app/Contents/MacOS/pluginval --strictness-level 10 --validate-in-process --timeout-ms 600000 "build/MergeX_artefacts/Release/VST3/MergeX.vst3" 2>&1 | tee pluginval-vst3-log.txt
+      - name: Package
+        if: success()
+        run: |
+          mkdir -p "pkg/MergeX"
+          cp -R "build/MergeX_artefacts/Release/VST3/MergeX.vst3" "pkg/MergeX/"
+          cp scripts/INSTALL.txt README.md "pkg/MergeX/"
+          cd pkg && zip -9 -r -y -q "$GITHUB_WORKSPACE/MergeX-macOS-universal-v1.0.zip" "MergeX"
+          shasum -a 256 "$GITHUB_WORKSPACE/MergeX-macOS-universal-v1.0.zip" | tee "$GITHUB_WORKSPACE/sha256.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: MergeX-macOS-universal-v1.0
+          path: |
+            MergeX-macOS-universal-v1.0.zip
+            shots/*.png
+            demos/*.wav
+            engine-test-log.txt
+            plugin-test-log.txt
+            pluginval-vst3-log.txt
+            demos-log.txt
+            lipo.txt
+            version.txt
+            minos.txt
+            size.txt
+            sha256.txt

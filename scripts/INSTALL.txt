@@ -1,0 +1,41 @@
+MergeX v1.0 - install on your Mac (VST3 for FL Studio)
+=======================================================
+
+1. Unzip this folder. Inside is "MergeX.vst3".
+2. Copy "MergeX.vst3" into this folder:
+       /Library/Audio/Plug-Ins/VST3
+   (In Finder: Go > Go to Folder..., paste the path, then drag the .vst3 in.
+    macOS asks for your password because this folder is shared by all users.)
+   Use the main /Library folder, not the one inside your home folder.
+3. Open FL Studio and go to  Options > Manage plugins > Find plugins.
+   MergeX shows up under Effects (made by koobacorp).
+
+If macOS says the plug-in "can't be opened" or FL doesn't list it:
+   This build is ad-hoc signed (not notarized by Apple). Run this once in Terminal:
+       sudo xattr -dr com.apple.quarantine "/Library/Audio/Plug-Ins/VST3/MergeX.vst3"
+   then do Find plugins again in FL.
+
+
+Routing a second sound (B) into MergeX in FL Studio
+---------------------------------------------------
+MergeX morphs sound A (the track it sits on) into sound B (its sidechain input).
+
+1. Give both sounds their own mixer tracks. Example: vocal on mixer track 1 (A), synth on mixer track 2 (B).
+2. Put MergeX in an effect slot on track 1 (the A track).
+3. Click track 2 (the B track) in the mixer to select it.
+4. On track 1, right-click the small arrow at the bottom of the strip and pick "Sidechain to this track".
+   (B now feeds track 1's sidechain without being sent to its main input.)
+5. Open MergeX, click the gear icon at the top left of the plug-in window (the wrapper settings),
+   open the "Processing" tab, and in the input connections set MergeX's "Sidechain" input
+   to track 2 if FL didn't do it on its own.
+6. Back in MergeX, look at the SOURCES panel. It should say "B: sidechain input".
+   If it says "B: built-in Pad (sidechain is silent)", B isn't arriving yet: check steps 3 to 5,
+   and make sure track 2 is playing.
+7. If you don't want B to be heard on its own, turn track 2's send to the Master down
+   (the sidechain send still works).
+
+No second sound? Leave it. With no sidechain, MergeX morphs A with a built-in tone.
+Pick Noise, Saw or Pad under B Source, and Tone Note sets the pitch of the Saw and Pad.
+
+Latency: MergeX delays the sound by about 21 ms and tells FL, so FL lines everything
+up on playback. While recording through it live you'll feel that small delay.

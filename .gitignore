@@ -1,0 +1,4 @@
+build/
+JUCE/
+dist/
+*.o
